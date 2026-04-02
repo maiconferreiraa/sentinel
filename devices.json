@@ -1,0 +1,14 @@
+[
+    {
+        "name": "Camera Entrada",
+        "ip": "192.168.1.10",
+        "mac_expected": "AA:BB:CC:DD:EE:01",
+        "type": "Bullet"
+    },
+    {
+        "name": "Camera Estacionamento",
+        "ip": "192.168.1.11",
+        "mac_expected": "AA:BB:CC:DD:EE:02",
+        "type": "PTZ"
+    }
+]
