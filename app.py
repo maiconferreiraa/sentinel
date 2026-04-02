@@ -106,7 +106,8 @@ HTML_INTERFACE = """
             dl.style.display = "none";
             status.innerHTML = "🚀 Auditoria em progresso...<br><small>O HP está a varrer a rede local.</small>";
             
-            fetch('/audit', {
+            // Procure por esta linha no seu JavaScript dentro do app.py:
+            fetch('/audit', {  // <-- Use apenas '/audit' (caminho relativo)
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({
