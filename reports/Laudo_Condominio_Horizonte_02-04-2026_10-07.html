@@ -1,0 +1,181 @@
+
+    <!DOCTYPE html>
+    <html lang="pt-br">
+    <head>
+        <meta charset="UTF-8">
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <style>
+            :root {
+                --primary: #0f172a; --success: #10b981; --danger: #ef4444; --warning: #f59e0b; --bg: #f1f5f9;
+            }
+            body { font-family: sans-serif; background: var(--bg); color: var(--primary); margin: 0; padding: 20px; }
+            .container { max-width: 1000px; margin: auto; background: white; padding: 30px; border-radius: 12px; border-top: 8px solid var(--primary); box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+            .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 1px solid #eee; padding-bottom: 15px; }
+            .logo { max-height: 60px; }
+            .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 25px; }
+            .stat-card { padding: 15px; background: #fff; border: 1px solid #eee; border-radius: 8px; text-align: center; }
+            .stat-card span { display: block; font-size: 20px; font-weight: bold; }
+            .stat-card label { font-size: 10px; color: #64748b; text-transform: uppercase; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            th { background: #f8fafc; text-align: left; padding: 12px; font-size: 11px; color: #64748b; border-bottom: 2px solid #edf2f7; }
+            td { padding: 12px; border-bottom: 1px solid #edf2f7; font-size: 13px; }
+            .badge { padding: 4px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; color: white; }
+            .status-ok { background: var(--success); }
+            .status-fail { background: var(--danger); }
+            .status-alert { background: var(--warning); }
+            .footer { margin-top: 30px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #eee; padding-top: 20px; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <div>
+                    <h2 style="margin:0;">Laudo Técnico de Auditoria CFTV</h2>
+                    <p style="margin:5px 0; color:#64748b; font-size:12px;">Cliente: Condominio_Horizonte | 02/04/2026 10:07</p>
+                </div>
+                <img src="http://192.160.0.115:5000/logo.jpg" class="logo" onerror="this.style.display='none'">
+            </div>
+
+            <div class="stats">
+                <div class="stat-card"><span>12</span><label>Ativos</label></div>
+                <div class="stat-card"><span style="color:var(--success)">8%</span><label>Saúde</label></div>
+                <div class="stat-card"><span style="color:var(--warning)">0</span><label>Alertas</label></div>
+                <div class="stat-card"><span style="color:var(--danger)">11</span><label>Falhas</label></div>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Dispositivo / IP</th>
+                        <th>Perda</th>
+                        <th>Ping</th>
+                        <th>Jitter</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+    
+                <tr>
+                    <td><strong>Câmera IP 51</strong><br><small>172.23.26.51</small></td>
+                    <td>0%</td>
+                    <td>20.831ms</td>
+                    <td>32.806ms</td>
+                    <td><span class="badge status-ok">Estável</span></td>
+                </tr>
+        
+                <tr>
+                    <td><strong>Câmera IP 56</strong><br><small>172.23.26.56</small></td>
+                    <td>3333%</td>
+                    <td>65.403ms</td>
+                    <td>64.797ms</td>
+                    <td><span class="badge status-fail">Crítico</span></td>
+                </tr>
+        
+                <tr>
+                    <td><strong>Câmera IP 63</strong><br><small>172.23.26.63</small></td>
+                    <td>50%</td>
+                    <td>125.554ms</td>
+                    <td>170.562ms</td>
+                    <td><span class="badge status-fail">Crítico</span></td>
+                </tr>
+        
+                <tr>
+                    <td><strong>Câmera IP 64</strong><br><small>172.23.26.64</small></td>
+                    <td>3333%</td>
+                    <td>63.654ms</td>
+                    <td>59.234ms</td>
+                    <td><span class="badge status-fail">Crítico</span></td>
+                </tr>
+        
+                <tr>
+                    <td><strong>Câmera IP 65</strong><br><small>172.23.26.65</small></td>
+                    <td>3333%</td>
+                    <td>118.956ms</td>
+                    <td>150.125ms</td>
+                    <td><span class="badge status-fail">Crítico</span></td>
+                </tr>
+        
+                <tr>
+                    <td><strong>Câmera IP 69</strong><br><small>172.23.26.69</small></td>
+                    <td>3333%</td>
+                    <td>117.959ms</td>
+                    <td>149.796ms</td>
+                    <td><span class="badge status-fail">Crítico</span></td>
+                </tr>
+        
+                <tr>
+                    <td><strong>Câmera IP 71</strong><br><small>172.23.26.71</small></td>
+                    <td>50%</td>
+                    <td>32.908ms</td>
+                    <td>34.607ms</td>
+                    <td><span class="badge status-fail">Crítico</span></td>
+                </tr>
+        
+                <tr>
+                    <td><strong>Câmera IP 72</strong><br><small>172.23.26.72</small></td>
+                    <td>3333%</td>
+                    <td>123.043ms</td>
+                    <td>150.851ms</td>
+                    <td><span class="badge status-fail">Crítico</span></td>
+                </tr>
+        
+                <tr>
+                    <td><strong>Câmera IP 73</strong><br><small>172.23.26.73</small></td>
+                    <td>50%</td>
+                    <td>3.557ms</td>
+                    <td>0.444ms</td>
+                    <td><span class="badge status-fail">Crítico</span></td>
+                </tr>
+        
+                <tr>
+                    <td><strong>Câmera IP 77</strong><br><small>172.23.26.77</small></td>
+                    <td>50%</td>
+                    <td>36.449ms</td>
+                    <td>36.468ms</td>
+                    <td><span class="badge status-fail">Crítico</span></td>
+                </tr>
+        
+                <tr>
+                    <td><strong>Câmera IP 82</strong><br><small>172.23.26.82</small></td>
+                    <td>50%</td>
+                    <td>30.876ms</td>
+                    <td>33.276ms</td>
+                    <td><span class="badge status-fail">Crítico</span></td>
+                </tr>
+        
+                <tr>
+                    <td><strong>Câmera IP 96</strong><br><small>172.23.26.96</small></td>
+                    <td>50%</td>
+                    <td>35.279ms</td>
+                    <td>36.626ms</td>
+                    <td><span class="badge status-fail">Crítico</span></td>
+                </tr>
+        
+                </tbody>
+            </table>
+
+            <div class="footer">
+                <div style="width:150px;"><canvas id="myChart"></canvas></div>
+                <div style="text-align:right;">
+                    <p style="margin:0; font-weight:bold;">Eng. Maicon Ferreira</p>
+                    <small style="color:#64748b;">VMI Sistemas de Segurança</small>
+                </div>
+            </div>
+
+            <script>
+                const ctx = document.getElementById('myChart');
+                new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        datasets: [{
+                            data: [1, 0, 11],
+                            backgroundColor: ['#10b981', '#f59e0b', '#ef4444'],
+                        }]
+                    },
+                    options: { cutout: '70%', plugins: { legend: { display: false } } }
+                });
+            </script>
+        </div>
+    </body>
+    </html>
+    
