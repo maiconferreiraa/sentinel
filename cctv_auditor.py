@@ -87,8 +87,8 @@ def iniciar_auditoria(cliente, rede_base):
     cctv_devices = [r for r in results if r is not None]
     
     if cctv_devices:
-        import reporter
-        path = reporter.generate_html_report(cctv_devices, cliente)
+        import reporterr
+        path = reporterr.generate_html_report(cctv_devices, cliente)
         messagebox.showinfo("Sucesso", f"Laudo gerado com sucesso!\nSalvo em: {path}")
     else:
         messagebox.showwarning("Aviso", "Nenhum dispositivo de CFTV encontrado na rede.")
