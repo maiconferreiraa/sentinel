@@ -9,13 +9,13 @@ from concurrent.futures import ThreadPoolExecutor
 app = Flask(__name__)
 
 # ==========================================
-# FUNÇÃO DE AUTOMAÇÃO DE IP (MAICON FERREIRA)
+# IDENTIFICAÇÃO AUTOMÁTICA (HOME AUTOMATION)
 # ==========================================
+
 def get_my_ip():
-    """ Descobre o IP real do notebook na rede atual do cliente automaticamente """
+    """Descobre o IP do HP na rede atual do cliente"""
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     try:
-        # Tenta traçar uma rota externa (não precisa de internet real)
         s.connect(('8.8.8.8', 1))
         ip_detectado = s.getsockname()[0]
     except Exception:
@@ -24,48 +24,68 @@ def get_my_ip():
         s.close()
     return ip_detectado
 
-# Configurações Iniciais Dinâmicas
+def get_mac_address(ip):
+    """Busca o MAC no cache ARP do Ubuntu (ip neigh)"""
+    try:
+        arp_out = subprocess.check_output(["ip", "neigh", "show", ip]).decode()
+        if "lladdr" in arp_out:
+            return arp_out.split("lladdr")[1].split()[0].upper()
+    except:
+        return None
+    return None
+
+def identify_vendor(mac):
+    """Identifica o fabricante pelos 6 primeiros dígitos do MAC"""
+    if not mac: return "Dispositivo"
+    
+    # Prefixos comuns em Automação e Redes
+    vendors = {
+        "00:1A:3F": "Intelbras/Dahua",
+        "44:19:B6": "Hikvision",
+        "18:FE:34": "Espressif (Sonoff/Tuya)",
+        "BC:DD:C2": "TP-Link",
+        "D8:00:4D": "Apple",
+        "B4:E3:F9": "Samsung",
+        "00:0C:29": "VMware"
+    }
+    prefix = mac[:8]
+    return vendors.get(prefix, "Genérico")
+
+def get_device_name(ip):
+    """Tenta Hostname -> Se falhar, tenta Fabricante pelo MAC"""
+    try:
+        # Tenta resolver o nome que o dispositivo dá para a rede
+        name_data = socket.gethostbyaddr(ip)
+        hostname = name_data[0]
+        if hostname != ip:
+            return hostname
+    except:
+        pass
+    
+    # Se não tem nome de rede, identifica pelo hardware
+    mac = get_mac_address(ip)
+    vendor = identify_vendor(mac)
+    return f"{vendor} ({ip.split('.')[-1]})"
+
+# --- CONFIGURAÇÕES DO SISTEMA ---
 MEU_IP_LOCAL = get_my_ip()
 BASE_DIR = os.getcwd()
 REPORTS_DIR = os.path.join(BASE_DIR, 'reports')
 LOGO_FILENAME = "logo.jpg"
 
-# Nomes conhecidos para facilitar sua auditoria na VMI
-NOMES_MANUAIS = {
-    "172.23.26.118": "NVR Principal VMI",
-    "172.23.26.10": "Switch POE Central",
-}
-
 if not os.path.exists(REPORTS_DIR):
     os.makedirs(REPORTS_DIR)
 
 # ==========================================
-# LÓGICA DE VARREDURA DE REDE
+# LÓGICA DE VARREDURA (PING & JITTER)
 # ==========================================
 
-def get_device_name(ip):
-    if ip in NOMES_MANUAIS: return NOMES_MANUAIS[ip]
-    try:
-        return f"Câmera IP {ip.split('.')[-1]}"
-    except:
-        return "Dispositivo Desconhecido"
-
-def check_port(ip, port):
-    """ Verifica se portas de vídeo/CCTV estão abertas """
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.settimeout(0.3)
-        return s.connect_ex((ip, port)) == 0
-
 def get_network_details(ip):
-    """ Realiza o Ping e Jitter real no cliente """
+    """Realiza a auditoria técnica de cada IP"""
     if ip == MEU_IP_LOCAL: return None
     
-    # Filtro inteligente: Só audita se for porta de CCTV ou estiver na lista
-    is_cctv = any(check_port(ip, p) for p in [554, 8000, 37777, 80, 8080])
-    if not is_cctv and ip not in NOMES_MANUAIS: return None
-
-    # Executa pings para medir estabilidade
-    ping_proc = subprocess.run(["ping", "-c", "6", "-i", "0.2", "-W", "1", ip], capture_output=True, text=True)
+    # Ping rápido: 4 pacotes, espera 1s
+    ping_proc = subprocess.run(["ping", "-c", "4", "-W", "1", ip], capture_output=True, text=True)
     if ping_proc.returncode != 0: return None 
 
     stdout = ping_proc.stdout
@@ -75,15 +95,16 @@ def get_network_details(ip):
     avg_lat = float(lat_match.group(2)) if lat_match else 0.0
     jitter = float(lat_match.group(4)) if lat_match else 0.0
 
+    # Critérios de Engenharia
     status, classe = "Estável", "status-ok"
-    intervencao = "Sistema em conformidade técnica."
+    intervencao = "Sistema em conformidade."
     
     if loss > 0:
         status, classe = "Crítico", "status-fail"
-        intervencao = f"Perda de {loss}% de pacotes. Revisar conectores."
-    elif jitter > 35:
-        status, classe = "Instável", "status-fail"
-        intervencao = f"Jitter elevado ({jitter}ms). Possível gargalo no Switch."
+        intervencao = f"Perda de {loss}%. Revisar infra."
+    elif jitter > 30:
+        status, classe = "Alerta", "status-alert"
+        intervencao = "Jitter alto. Possível interferência."
     
     return {
         "ip": ip, "dispositivo": get_device_name(ip), "loss": loss, 
@@ -98,42 +119,40 @@ HTML_INTERFACE = """
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Sentinel Pro v7.0</title>
+    <title>Sentinel Pro - Home Automation</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
-        body { font-family: sans-serif; background: #f1f5f9; color: #0f172a; text-align: center; padding: 20px; }
-        .card { background: white; padding: 30px; border-radius: 20px; max-width: 450px; margin: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border-top: 8px solid #10b981; }
-        input { width: 100%; padding: 15px; margin: 10px 0; border: 1px solid #ddd; border-radius: 10px; font-size: 16px; box-sizing: border-box; }
-        button { width: 100%; padding: 18px; background: #10b981; color: white; border: none; border-radius: 10px; font-weight: bold; font-size: 18px; cursor: pointer; transition: 0.3s; }
-        #status { margin: 25px 0; font-weight: bold; color: #3b82f6; min-height: 50px; }
-        .btn-download { background: #3b82f6; text-decoration: none; padding: 15px; color: white; border-radius: 10px; display: block; margin-top: 10px; font-weight: bold; }
+        body { font-family: sans-serif; background: #0f172a; color: white; text-align: center; padding: 20px; }
+        .card { background: white; color: #333; padding: 30px; border-radius: 20px; max-width: 450px; margin: auto; }
+        input { width: 100%; padding: 15px; margin: 10px 0; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; }
+        button { width: 100%; padding: 18px; background: #10b981; color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; }
+        #status { margin-top: 20px; font-weight: bold; color: #3b82f6; }
+        .btn-dl { background: #3b82f6; text-decoration: none; padding: 15px; color: white; border-radius: 10px; display: block; margin-top: 15px; font-weight: bold; }
     </style>
 </head>
 <body>
     <div class="card">
-        <img src="/logo.jpg" style="max-height: 60px; margin-bottom: 20px;" onerror="this.style.display='none'">
-        <h2>Sentinel Pro Cloud-Link</h2>
-        <p style="color:#64748b;">Auditoria de Campo Automatizada</p>
+        <img src="/logo.jpg" style="max-height: 60px; margin-bottom: 10px;" onerror="this.style.display='none'">
+        <h2 style="margin:0">Sentinel Pro</h2>
+        <p style="color:#64748b; font-size:14px;">Home Automation Technology</p>
         
-        <input type="text" id="cli" placeholder="Cliente" value="Condominio_Horizonte">
-        <input type="text" id="net" placeholder="Rede (ex: 172.23.26.)" value="172.23.26.">
+        <input type="text" id="cli" placeholder="Cliente" value="Residencia_Automação">
+        <input type="text" id="net" placeholder="Faixa de Rede (ex: 192.168.0.)" value="192.168.0.">
         
-        <button id="btn" onclick="run()">INICIAR VARREDURA REAL</button>
-        
-        <div id="status">Aguardando comando...</div>
-        <a id="dl" class="btn-download" style="display:none;" target="_blank">VER LAUDO GERADO</a>
+        <button id="btn" onclick="runAudit()">INICIAR AUDITORIA</button>
+        <div id="status">Pronto para escanear.</div>
+        <a id="dl" class="btn-dl" style="display:none;" target="_blank">BAIXAR LAUDO TÉCNICO</a>
     </div>
 
     <script>
-        function run() {
+        function runAudit() {
             const btn = document.getElementById('btn');
             const status = document.getElementById('status');
             const dl = document.getElementById('dl');
             
             btn.disabled = true;
-            btn.style.opacity = "0.5";
             dl.style.display = "none";
-            status.innerHTML = "🚀 Varrendo rede...<br><small>O HP está disparando pings agora.</small>";
+            status.innerHTML = "🚀 Varrendo rede...<br><small>O HP está identificando os ativos.</small>";
             
             fetch('/audit', {
                 method: 'POST',
@@ -145,21 +164,24 @@ HTML_INTERFACE = """
             })
             .then(res => res.json())
             .then(data => {
-                status.innerHTML = "✅ Auditoria Completa!";
-                btn.disabled = false; btn.style.opacity = "1";
+                status.innerHTML = "✅ Auditoria Concluída!";
+                btn.disabled = false;
                 dl.href = "/download/" + data.filename;
                 dl.style.display = "block";
-                setTimeout(() => { window.location.href = dl.href; }, 1000);
             })
             .catch(err => {
-                status.innerText = "❌ Erro: Verifique a conexão do HP.";
-                btn.disabled = false; btn.style.opacity = "1";
+                status.innerText = "❌ Erro de conexão com o HP.";
+                btn.disabled = false;
             });
         }
     </script>
 </body>
 </html>
 """
+
+# ==========================================
+# ROTAS FLASK
+# ==========================================
 
 @app.route('/')
 def home():
@@ -174,15 +196,18 @@ def audit():
     req = request.json
     rede = req['rede'] if req['rede'].endswith('.') else req['rede'] + '.'
     
-    # Identifica o IP atual automaticamente antes de gerar o laudo
+    # Redescobre o IP antes de cada scan
     ip_atual = get_my_ip()
     ips = [f"{rede}{i}" for i in range(1, 255)]
     
+    # 50 threads para ser ultra rápido no notebook HP
     with ThreadPoolExecutor(max_workers=50) as exe:
         results = [r for r in list(exe.map(get_network_details, ips)) if r]
     
     import reporter
-    # Passa o ip_atual para o reporter.py carregar a logo via rede
+    import importlib
+    importlib.reload(reporter) # Garante que o reporter.py atualizado seja lido
+    
     filename = reporter.generate_html_report(results, req['cliente'], ip_atual)
     return jsonify({"filename": filename})
 
@@ -191,8 +216,6 @@ def download(filename):
     return send_from_directory(REPORTS_DIR, filename)
 
 if __name__ == "__main__":
-    print(f"--- SENTINEL PRO ATIVADO ---")
-    print(f"IP DO NOTEBOOK: {MEU_IP_LOCAL}")
+    print(f"--- HOME AUTOMATION TECHNOLOGY ---")
     print(f"ACESSE NO TABLET: http://{MEU_IP_LOCAL}:5000")
-    print(f"----------------------------")
     app.run(host='0.0.0.0', port=5000)

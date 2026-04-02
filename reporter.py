@@ -9,9 +9,10 @@ def generate_html_report(results, cliente_name, hp_ip):
     nome_arq = f"Laudo_{cliente_name}_{data_formatada}.html"
     caminho_final = os.path.join("reports", nome_arq)
     
-    # URL dinâmica para a logo aparecer no tablet via rede
+    # URL dinâmica para a logo carregar no tablet via rede local
     logo_url = f"http://{hp_ip}:5000/logo.jpg"
     
+    # Cálculos de Métricas
     estaveis = len([r for r in results if r['status'] == "Estável"])
     alertas = len([r for r in results if r['status'] == "Alerta"])
     criticos = len([r for r in results if r['status'] == "Crítico" or r['status'] == "Instável"])
@@ -37,7 +38,6 @@ def generate_html_report(results, cliente_name, hp_ip):
                 .container {{ box-shadow: none !important; border: none !important; width: 100% !important; max-width: 100% !important; padding: 0 !important; }}
                 .badge {{ -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }}
                 .page-break {{ page-break-before: always; }}
-                thead {{ display: table-header-group; }}
             }}
             body {{ font-family: 'Inter', sans-serif; background: var(--bg); color: var(--primary); margin: 0; padding: 30px; }}
             .container {{ max-width: 1100px; margin: auto; background: white; padding: 40px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); border-top: 10px solid var(--primary); }}
@@ -74,7 +74,7 @@ def generate_html_report(results, cliente_name, hp_ip):
             <div class="header">
                 <div>
                     <h1 style="margin:0; letter-spacing:-1px;">Relatório de Auditoria Digital CFTV e REDE</h1>
-                    <p style="margin:5px 0; color:#64748b;">Referência: <strong>{cliente_name}</strong> | Data: {data_visual}</p>
+                    <p style="margin:5px 0; color:#64748b;">Referência: <strong>{cliente_name}</strong> | Gerado em: {data_visual}</p>
                 </div>
                 <img src="{logo_url}" alt="Logo" class="logo" onerror="this.style.display='none'">
             </div>
@@ -89,12 +89,12 @@ def generate_html_report(results, cliente_name, hp_ip):
             <table>
                 <thead>
                     <tr>
-                        <th>Identificação / IP</th>
+                        <th>Ativo Identificado / IP</th>
                         <th>Perda</th>
-                        <th>Ping</th>
+                        <th>Latência</th>
                         <th>Jitter</th>
                         <th>Estado</th>
-                        <th>Intervenção</th>
+                        <th>Intervenção Sugerida</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -117,39 +117,37 @@ def generate_html_report(results, cliente_name, hp_ip):
             </table>
             <div class="page-break"></div>
             <div class="guide-section">
-                <h3 style="margin:0 0 20px 0; color:var(--primary); text-transform: uppercase; font-size: 16px;">📖 Guia de Interpretação Técnica</h3>
+                <h3 style="margin:0 0 20px 0; color:var(--primary); text-transform: uppercase; font-size: 16px;">📖 Guia de Interpretação Técnica - Home Automation Technology</h3>
                 <div class="guide-grid">
                     <div class="guide-item">
                         <h4>Identificação / IP</h4>
-                        <p>Refere-se ao nome amigável do dispositivo e seu endereço único na rede. Facilita a localização física do ativo no local.</p>
+                        <p>Endereço único do hardware na rede. Nomes baseados no fabricante ajudam na localização física dos ativos de automação.</p>
                     </div>
                     <div class="guide-item">
                         <h4>Perda de Dados (Packet Loss)</h4>
-                        <p>O ideal é <b>0%</b>. Qualquer perda indica que pacotes de vídeo foram descartados no trajeto, gerando falhas de imagem e lacunas na gravação.</p>
+                        <p>O ideal é <b>0%</b>. Valores acima disso geram falhas em comandos de voz, automações e engasgos em câmeras IP.</p>
                     </div>
                     <div class="guide-item">
                         <h4>Ping (Latência)</h4>
-                        <p>Mede o tempo de resposta da rede. Deve ser abaixo de <b>50ms</b>. Valores altos causam atraso severo no monitoramento e nos comandos das câmeras.</p>
+                        <p>Tempo de resposta do sinal. Para uma automação fluida, deve estar abaixo de <b>50ms</b>.</p>
                     </div>
                     <div class="guide-item">
-                        <h4>Jitter (Oscilação de Sinal)</h4>
-                        <p>Mede a estabilidade da latência. Se o Jitter for alto, a imagem sofrerá pequenos travamentos e perda de fluidez (stuttering).</p>
-                    </div>
-                    <div class="guide-item">
-                        <h4>Estado (Status)</h4>
-                        <p><b>Estável:</b> Operando em conformidade. <br><b>Alerta:</b> Necessita atenção preventiva. <br><b>Crítico:</b> Falha técnica ativa com risco de perda de monitoramento.</p>
+                        <h4>Jitter (Estabilidade)</h4>
+                        <p>Variação da latência. Valores altos (acima de 30ms) causam desconexões frequentes em interruptores inteligentes.</p>
                     </div>
                 </div>
             </div>
+            
             <div class="final-layout">
                 <div style="width:300px;"><canvas id="healthChart"></canvas></div>
                 <div class="footer-signature">
                     <div class="signature-line"></div>
                     <span style="font-weight:800; font-size:14px;">Maicon Ferreira</span><br>
                     <small style="font-size:11px; color:#64748b;">Engenheiro de Controle e Automação</small>
-                    <p style="margin-top:15px; font-size:10px; color:white; background:var(--primary); padding:5px; border-radius:4px;">APROVADO TÉCNICAMENTE</p>
+                    <p style="margin-top:15px; font-size:10px; color:white; background:var(--primary); padding:5px; border-radius:4px;">CERTIFICADO HOME AUTOMATION TECHNOLOGY</p>
                 </div>
             </div>
+            
             <script>
                 new Chart(document.getElementById('healthChart'), {{
                     type: 'doughnut',
@@ -170,4 +168,4 @@ def generate_html_report(results, cliente_name, hp_ip):
     """
     with open(caminho_final, "w", encoding="utf-8") as f:
         f.write(html)
-    return nome_arq # Retorna apenas o nome do arquivo para o app.py montar o link de download corretamente
+    return nome_arq
